@@ -1,8 +1,9 @@
-function App() {
+import PageHome from './pages/home';
 
+function App() {
   return (
     <div className="App">
-     <div></div>
+        <PageHome/>
     </div>
   )
 }
