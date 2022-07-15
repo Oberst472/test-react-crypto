@@ -1,19 +1,18 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import styles from './style.module.scss'
-import { InfoType } from '../../../types';
+import { InfoType, Info } from '../../../types';
 
 import BlockCurrencyInfo from '../../blocks/currencyInfo';
+import BlockFee from '../../blocks/fee';
 import UiLoading from '../../ui/loading';
+import UiBtn from '../../ui/btn';
 
 import { apiGetInfo } from '../../../api';
 
-type Info = {
-    source_amount?: string
-    target_amount?: string
-}
 const SectionCalculator = () => {
     const [info, setInfo] = useState(null as InfoType | null)
+    const [errorMessage, setErrorMessage] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [throttle, setThrottle] = useState(null as any)
 
@@ -29,15 +28,16 @@ const SectionCalculator = () => {
         const data = {...obj, ...info}
         try {
             const res = await apiGetInfo(data)
-            setInfo(res)
-            console.log(res);
+            const info = await res.json()
+            setInfo(info)
+            if (!res.ok) setErrorMessage(info.message)
         } catch (e) {
             console.log(e);
-        } finally {
-            'success'
+            setErrorMessage('Error!')
         }
     }
-    const changeVal = async function (e: ChangeEvent<HTMLInputElement>, name: string) {
+    const changeAmount = async function (e: ChangeEvent<HTMLInputElement>, name: string) {
+        if (errorMessage) setErrorMessage('')
         const val = e.target.value
 
         setInfo({...info, [name]: val} as InfoType)
@@ -52,25 +52,37 @@ const SectionCalculator = () => {
     }
     return (
         <section className={clsx(styles['section-calculator'])}>
-            <h1>Select your Amount</h1>
+            {errorMessage && <span className={clsx(styles['section-calculator__error'])}>{errorMessage}</span>}
+            <h1 className={clsx(styles['section-calculator__title'])}>Select your Amount</h1>
 
             <BlockCurrencyInfo
                 sum={info?.source_amount}
                 currency={'usd'}
                 name={'source_amount'}
-                changeVal={changeVal}
+                changeVal={changeAmount}
             >
                 You pay
             </BlockCurrencyInfo>
+
+            <BlockFee
+                className={styles['section-calculator__fee']}
+                c14Fee={info?.absolute_internal_fee}
+                networkFee={info?.fiat_blockchain_fee}
+                totalFee={info?.total_fee}
+            >
+                Fees
+            </BlockFee>
 
             <BlockCurrencyInfo
                 sum={info?.target_amount}
                 currency={'USDC EVMOS'}
                 name={'target_amount'}
-                changeVal={changeVal}
+                changeVal={changeAmount}
             >
                 You receive
             </BlockCurrencyInfo>
+
+            <UiBtn className={clsx(styles['section-calculator__btn'])}>Buy now</UiBtn>
 
             {isLoading && <UiLoading/>}
         </section>

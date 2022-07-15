@@ -4,9 +4,7 @@ import clsx from 'clsx';
 
 const UiLoading = () => {
     return (
-        <div className={clsx(styles['ui-loading'])}>
-            Loading
-        </div>
+        <div className={clsx(styles['ui-loading'])}></div>
     );
 };
 
